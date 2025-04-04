@@ -1,7 +1,7 @@
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
 
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     static class KeyPressExample {
         static final int WIDTH = 30;
@@ -15,34 +15,38 @@ public class Main {
         static int snakeX = WIDTH / 2;
         static int snakeY = HEIGHT / 2;
         static int foodX, foodY;
-        static String direction = "RIGHT";
+        static int direction = 'w';
         static LinkedList<int[]> snake = new LinkedList<>();
 
         public static void main(String[] args) throws InterruptedException {
             snake.add(new int[]{snakeX, snakeY});
-            snake.add(new int[]{snakeX+1, snakeY});
-
-            while(true){
+            snake.add(new int[]{snakeX + 1, snakeY});
             placeFood();
-            place();
-            move();
+
+            while (true) {
+                try {
+                    if (System.in.available() > 0) {
+                        direction = System.in.read();
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                place();
+                move(direction);
                 Thread.sleep(750);
             }
         }
 
-
         static void place() {
-            System.out.print("\033[H\033[2J"); // Clear terminal
+            System.out.print("\033[H\033[2J");
             System.out.flush();
             int[] firstSegment = snake.getFirst();
-            int snake_xhead = firstSegment[0]; // X-coordinate
-            int snake_yhead = firstSegment[1]; // Y-coordinate
+            int snake_xhead = firstSegment[0];
+            int snake_yhead = firstSegment[1];
 
             for (int y = 0; y <= HEIGHT; y++) {
                 for (int x = 0; x <= WIDTH; x++) {
-                    if (y == 0 || y == HEIGHT) {
-                        System.out.print(WALL);
-                    } else if (x == 0 || x == WIDTH) {
+                    if (y == 0 || y == HEIGHT || x == 0 || x == WIDTH) {
                         System.out.print(WALL);
                     } else if (x == foodX && y == foodY) {
                         System.out.print(FOOD);
@@ -68,23 +72,33 @@ public class Main {
 
         static void placeFood() {
             Random rand = new Random();
+            int attempts = 0;
             while (true) {
                 foodX = rand.nextInt(WIDTH - 2) + 1;
                 foodY = rand.nextInt(HEIGHT - 2) + 1;
                 if (!bodycheck(foodX, foodY)) break;
+                if (++attempts > 100) return;
             }
         }
-        static void move(){
+
+        static void move(int direction) {
             int[] firstSegment = snake.getFirst();
-            int snake_xhead = firstSegment[0]; // X-coordinate
-            int snake_yhead = firstSegment[1]; // Y-coordinate
+            int snake_xhead = firstSegment[0];
+            int snake_yhead = firstSegment[1];
 
-            snake.addFirst(new int[]{snake_xhead+1, snake_yhead});
+            switch (direction) {
+                case 'w', 'W': snake_yhead--; break;
+                case 's', 'S': snake_yhead++; break;
+                case 'a', 'A': snake_xhead--; break;
+                case 'd', 'D': snake_xhead++; break;
+                default:
+            }
 
-            if (snakeX == foodX && snakeY == foodY) {
-                placeFood(); // Grow
+            snake.addFirst(new int[]{snake_xhead, snake_yhead});
+            if (snake_xhead == foodX && snake_yhead == foodY) {
+                placeFood();
             } else {
-                snake.removeLast(); // Move forward
+                snake.removeLast();
             }
         }
     }
