@@ -44,14 +44,27 @@ public class Main {
         System.out.println("\nGame Over! Final score: " + score);
     }
 
-    static void updateDirection(char newDir) { // as the name says also stops the snake from eating itself directly
+    static void updateDirection(char newDir) {
         switch (newDir) {
-            case 'w', 'W' -> { if (direction != 's') direction = 'w'; }
-            case 's', 'S' -> { if (direction != 'w') direction = 's'; }
-            case 'a', 'A' -> { if (direction != 'd') direction = 'a'; }
-            case 'd', 'D' -> { if (direction != 'a') direction = 'd'; }
+            case 'w':
+            case 'W':
+                if (direction != 's') direction = 'w';
+                break;
+            case 's':
+            case 'S':
+                if (direction != 'w') direction = 's';
+                break;
+            case 'a':
+            case 'A':
+                if (direction != 'd') direction = 'a';
+                break;
+            case 'd':
+            case 'D':
+                if (direction != 'a') direction = 'd';
+                break;
         }
     }
+
 
     static void move() {
         //Get the snake head a partir de la linked list, fin gets the snake head coordinates
@@ -59,13 +72,19 @@ public class Main {
         int x = head[0], y = head[1];
 
         switch (direction) {
-            // Si on considere le debut du terminal comme un repere 0,0 c'est au tout debut en haut a gauche
-            case 'w' -> y--;
-            case 's' -> y++;
-            case 'a' -> x--;
-            case 'd' -> x++;
+            case 'w':
+                y--;
+                break;
+            case 's':
+                y++;
+                break;
+            case 'a':
+                x--;
+                break;
+            case 'd':
+                x++;
+                break;
         }
-
         // Verfie pour les collisions
         if (x <= 0 || x >= WIDTH || y <= 0 || y >= HEIGHT || bodycheck(x, y)) {
             gameOver = true;
