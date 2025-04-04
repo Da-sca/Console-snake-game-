@@ -3,103 +3,126 @@ import java.util.LinkedList;
 import java.util.Random;
 
 public class Main {
-    static class KeyPressExample {
-        static final int WIDTH = 30;
-        static final int HEIGHT = 15;
-        static final char SNAKE_HEAD = 'O';
-        static final char SNAKE_BODY = 'o';
-        static final char WALL = '#';
-        static final char FOOD = '*';
-        static final char EMPTY = ' ';
+    static final int WIDTH = 50;
+    static final int HEIGHT = 15;
+    static final char SNAKE_HEAD = 'O';
+    static final char SNAKE_BODY = 'o';
+    static final char WALL = '#';
+    static final char FOOD = '*';
+    static final char EMPTY = ' ';
 
-        static int snakeX = WIDTH / 2;
-        static int snakeY = HEIGHT / 2;
-        static int foodX, foodY;
-        static int direction = 'w';
-        static LinkedList<int[]> snake = new LinkedList<>();
+    static int foodX, foodY;
+    static char direction = 'd'; //Au debut sa va a la droite
+    static LinkedList<int[]> snake = new LinkedList<>();
+    static boolean gameOver = false;
+    static int score = 0;
 
-        public static void main(String[] args) throws InterruptedException {
-            snake.add(new int[]{snakeX, snakeY});
-            snake.add(new int[]{snakeX + 1, snakeY});
-            placeFood();
-
-            while (true) {
-                try {
+    public static void main(String[] args) throws InterruptedException {
+        // Snake should obviously start at the middle
+        snake.add(new int[]{WIDTH / 2, HEIGHT / 2});
+        snake.add(new int[]{WIDTH / 2 - 1, HEIGHT / 2});
+        placeFood();
+// creates a thread for inputs cuz otherwise it's waaaay too slow
+        new Thread(() -> {
+            try {
+                while (!gameOver) {
                     if (System.in.available() > 0) {
-                        direction = System.in.read();
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                place();
-                move(direction);
-                Thread.sleep(750);
-            }
-        }
-
-        static void place() {
-            System.out.print("\033[H\033[2J");
-            System.out.flush();
-            int[] firstSegment = snake.getFirst();
-            int snake_xhead = firstSegment[0];
-            int snake_yhead = firstSegment[1];
-
-            for (int y = 0; y <= HEIGHT; y++) {
-                for (int x = 0; x <= WIDTH; x++) {
-                    if (y == 0 || y == HEIGHT || x == 0 || x == WIDTH) {
-                        System.out.print(WALL);
-                    } else if (x == foodX && y == foodY) {
-                        System.out.print(FOOD);
-                    } else if (x == snake_xhead && y == snake_yhead) {
-                        System.out.print(SNAKE_HEAD);
-                    } else if (bodycheck(x, y)) {
-                        System.out.print(SNAKE_BODY);
-                    } else {
-                        System.out.print(EMPTY);
+                        char newDir = (char) System.in.read();
+                        updateDirection(newDir);
                     }
                 }
-                System.out.println();
-            }
+            } catch (IOException ignored) {}
+        }).start();
+        //End of thread litterally just handles inputs
+
+        while (!gameOver) {
+            move();
+            place();
+            Thread.sleep(Math.max(120, 400 - score * 10)); // Progression change as you wish pour etre plus a l'aise
         }
 
-        static boolean bodycheck(int x, int y) {
-            for (int i = 1; i < snake.size(); i++) {
-                int[] segment = snake.get(i);
-                if (segment[0] == x && segment[1] == y) return true;
-            }
-            return false;
+        System.out.println("\nGame Over! Final score: " + score);
+    }
+
+    static void updateDirection(char newDir) { // as the name says also stops the snake from eating itself directly
+        switch (newDir) {
+            case 'w', 'W' -> { if (direction != 's') direction = 'w'; }
+            case 's', 'S' -> { if (direction != 'w') direction = 's'; }
+            case 'a', 'A' -> { if (direction != 'd') direction = 'a'; }
+            case 'd', 'D' -> { if (direction != 'a') direction = 'd'; }
+        }
+    }
+
+    static void move() {
+        //Get the snake head a partir de la linked list, fin gets the snake head coordinates
+        int[] head = snake.getFirst();
+        int x = head[0], y = head[1];
+
+        switch (direction) {
+            // Si on considere le debut du terminal comme un repere 0,0 c'est au tout debut en haut a gauche
+            case 'w' -> y--;
+            case 's' -> y++;
+            case 'a' -> x--;
+            case 'd' -> x++;
         }
 
-        static void placeFood() {
-            Random rand = new Random();
-            int attempts = 0;
-            while (true) {
-                foodX = rand.nextInt(WIDTH - 2) + 1;
-                foodY = rand.nextInt(HEIGHT - 2) + 1;
-                if (!bodycheck(foodX, foodY)) break;
-                if (++attempts > 100) return;
-            }
+        // Verfie pour les collisions
+        if (x <= 0 || x >= WIDTH || y <= 0 || y >= HEIGHT || bodycheck(x, y)) {
+            gameOver = true;
+            return;
         }
 
-        static void move(int direction) {
-            int[] firstSegment = snake.getFirst();
-            int snake_xhead = firstSegment[0];
-            int snake_yhead = firstSegment[1];
+        snake.addFirst(new int[]{x, y});
+        if (x == foodX && y == foodY) {
+            //Aggrandis le serpent si il mange pour gerer la progression
+            score++;
+            placeFood();
+        } else {
+            snake.removeLast();
+        }
+    }
 
-            switch (direction) {
-                case 'w', 'W': snake_yhead--; break;
-                case 's', 'S': snake_yhead++; break;
-                case 'a', 'A': snake_xhead--; break;
-                case 'd', 'D': snake_xhead++; break;
-                default:
-            }
+    static boolean bodycheck(int x, int y) {
+        // As the name says sa verifie si c'est le corps du serpent
+        for (int i = 1; i < snake.size(); i++) {
+            int[] seg = snake.get(i);
+            if (seg[0] == x && seg[1] == y) return true;
+        }
+        return false;
+    }
 
-            snake.addFirst(new int[]{snake_xhead, snake_yhead});
-            if (snake_xhead == foodX && snake_yhead == foodY) {
-                placeFood();
-            } else {
-                snake.removeLast();
+    static void placeFood() {
+        Random rand = new Random();
+        int attempts = 0;
+        while (true) {
+            foodX = rand.nextInt(WIDTH - 2) + 1;
+            foodY = rand.nextInt(HEIGHT - 2) + 1;
+            if (!bodycheck(foodX, foodY)) break;
+            if (++attempts > 100) return;
+        }
+    }
+
+    static void place() {
+        System.out.print("\033[H"); // Move to top-left
+        System.out.println("Score: " + score);
+        int[] head = snake.getFirst();
+        int xh = head[0], yh = head[1];
+
+        for (int y = 0; y <= HEIGHT; y++) {
+            for (int x = 0; x <= WIDTH; x++) {
+                if (y == 0 || y == HEIGHT || x == 0 || x == WIDTH) {
+                    System.out.print("\u001B[34m" + WALL + "\u001B[0m");       // Blue walls
+                } else if (x == foodX && y == foodY) {
+                    System.out.print("\u001B[31m" + FOOD + "\u001B[0m");       // Red food
+                } else if (x == xh && y == yh) {
+                    System.out.print("\u001B[32m" + SNAKE_HEAD + "\u001B[0m"); // Green snake body
+                } else if (bodycheck(x, y)) {
+                    System.out.print("\u001B[32m" + SNAKE_BODY + "\u001B[0m"); // Green snake body
+                } else {
+                    System.out.print(EMPTY);
+                }
             }
+            System.out.println();
         }
     }
 }
