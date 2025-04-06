@@ -18,30 +18,36 @@ public class Snake {
     static int score = 0;
 
     public static void main(String[] args) throws InterruptedException {
-        // Snake should obviously start at the middle
-        snake.add(new int[]{WIDTH / 2, HEIGHT / 2});
-        snake.add(new int[]{WIDTH / 2 - 1, HEIGHT / 2});
-        placeFood();
+        do {
+            gameOver = false;
+            score = 0;
+            snake.clear();
+            // Snake should obviously start at the middle
+            snake.add(new int[]{WIDTH / 2, HEIGHT / 2});
+            snake.add(new int[]{WIDTH / 2 - 1, HEIGHT / 2});
+            placeFood();
 // creates a thread for inputs cuz otherwise it's waaaay too slow
-        new Thread(() -> {
-            try {
-                while (!gameOver) {
-                    if (System.in.available() > 0) {
-                        char newDir = (char) System.in.read();
-                        updateDirection(newDir);
+            new Thread(() -> {
+                try {
+                    while (!gameOver) {
+                        if (System.in.available() > 0) {
+                            char newDir = (char) System.in.read();
+                            updateDirection(newDir);
+                        }
                     }
+                } catch (IOException ignored) {
                 }
-            } catch (IOException ignored) {}
-        }).start();
-        //End of thread litterally just handles inputs
+            }).start();
+            //End of thread litterally just handles inputs
 
-        while (!gameOver) {
-            move();
-            place();
-            Thread.sleep(Math.max(120, 400 - score * 30)); // Progression change as you wish pour etre plus a l'aise
-        }
+            while (!gameOver) {
+                move();
+                place();
+                Thread.sleep(Math.max(120, 400 - score * 30)); // Progression change as you wish pour etre plus a l'aise
+            }
 
-        System.out.println("\nGame Over! Final score: " + score);
+            System.out.println("\nGame Over! Final score: " + score);
+        } while (tryAgain());
     }
 
     static void updateDirection(char newDir) {
@@ -142,6 +148,17 @@ public class Snake {
                 }
             }
             System.out.println();
+        }
+    }
+
+    static boolean tryAgain() {
+        System.out.print("Play again? (y/n): ");
+        try {
+            char response = (char) System.in.read();
+            System.in.skip(System.in.available()); // sa sanitize? les inputs
+            return response == 'y' || response == 'Y';
+        } catch (IOException e) {
+            return false;
         }
     }
 }
