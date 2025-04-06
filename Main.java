@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class Main {
+public class Snake {
     static final int WIDTH = 50;
     static final int HEIGHT = 15;
     static final char SNAKE_HEAD = 'O';
@@ -38,7 +38,7 @@ public class Main {
         while (!gameOver) {
             move();
             place();
-            Thread.sleep(Math.max(120, 400 - score * 10)); // Progression change as you wish pour etre plus a l'aise
+            Thread.sleep(Math.max(120, 400 - score * 30)); // Progression change as you wish pour etre plus a l'aise
         }
 
         System.out.println("\nGame Over! Final score: " + score);
@@ -122,7 +122,7 @@ public class Main {
     }
 
     static void place() {
-        System.out.print("\033[H"); // Move to top-left
+        System.out.print("\033[H");
         System.out.println("Score: " + score);
         int[] head = snake.getFirst();
         int xh = head[0], yh = head[1];
@@ -130,13 +130,13 @@ public class Main {
         for (int y = 0; y <= HEIGHT; y++) {
             for (int x = 0; x <= WIDTH; x++) {
                 if (y == 0 || y == HEIGHT || x == 0 || x == WIDTH) {
-                    System.out.print("\u001B[34m" + WALL + "\u001B[0m");       // Blue walls
+                    System.out.print("\u001B[34m" + WALL + "\u001B[0m");       // Mur Bleu
                 } else if (x == foodX && y == foodY) {
-                    System.out.print("\u001B[31m" + FOOD + "\u001B[0m");       // Red food
+                    System.out.print("\u001B[31m" + FOOD + "\u001B[0m");       // Nourriture rouge
                 } else if (x == xh && y == yh) {
-                    System.out.print("\u001B[32m" + SNAKE_HEAD + "\u001B[0m"); // Green snake body
+                    System.out.print("\u001B[32m" + SNAKE_HEAD + "\u001B[0m"); // Corp vert
                 } else if (bodycheck(x, y)) {
-                    System.out.print("\u001B[32m" + SNAKE_BODY + "\u001B[0m"); // Green snake body
+                    System.out.print("\u001B[32m" + SNAKE_BODY + "\u001B[0m"); // Corp vert
                 } else {
                     System.out.print(EMPTY);
                 }
